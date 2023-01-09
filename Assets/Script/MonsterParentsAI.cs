@@ -15,46 +15,35 @@ public abstract class MonsterParentsAI : MonoBehaviour
     {
         root = GetComponent<INode>();
         InitRootNode();
+        myAni = GetComponent<Animator>();
 
     }
     private void Start()
     {
-        myAni = GetComponent<Animator>();
+
     }
 
     private void Update()
     {
         root.Run();
+
     }
 
     private void InitRootNode()  // 몬스터 AI 기본 행동 로직
     {
         Debug.Log("이닛");
         root = Selector
-            (                
-                IF(IsFind),               
-                IfElseAction(IsArrange, IsMove, IsAttack)
-                // 공격받았을 때 타격 애니메이션
+            (
+                 // 사정거리 범위 안에 있을 때만 맞고, 죽음 -> 죽으면 몇초 뒤에 사라짐
+                 IF(IsFind),
+                    IfElseAction(IsArange, IsMove, IsAttack)               
 
+                /*Sequence
+                (
+                    IfElseAction(IsAttackArrange, IsHit, IsDead)
+                )*/
             );
-
     }
-
-    // 데미지를 받았을 때 체크하려면
-    // 어떤 상태에서도 공격받을 수 있음
-    protected virtual Func<bool> ColiderCheck 
-    { 
-        get
-        {
-            return () =>
-            {
-                Debug.Log("맞음");
-                return true;
-            };
-        }
-
-    }
-
 
     // 어떤 경우에 대기할건지 정할 것
     protected virtual Action IsIdle
@@ -64,7 +53,7 @@ public abstract class MonsterParentsAI : MonoBehaviour
             return () =>
             {
                 Debug.Log("대기");
-                myAni.SetBool("IsMove", false);                
+                myAni.SetBool("IsMove", false);
             };
         }
     }
@@ -76,12 +65,12 @@ public abstract class MonsterParentsAI : MonoBehaviour
             return () =>
             {
                 Debug.Log("타겟 찾기");
-                
+
                 return true;
             };
         }
     }
-    
+
 
     protected virtual Action IsMove
     {
@@ -94,49 +83,82 @@ public abstract class MonsterParentsAI : MonoBehaviour
             };
         }
     }
-    protected virtual Func<bool> IsArrange
+    protected virtual Func<bool> IsArange
     {
         get
         {
             return () =>
             {
                 Debug.Log("범위 내에 있음");
+                return true;
+            };
+        }
+    }
+    /*protected virtual Func<bool> IsAttackArrange
+    {
+        get
+        {
+            return () =>
+            {
+                Debug.Log("공격 범위 내에 있음");
                 return false;
             };
         }
     }
+    protected virtual Func<bool> IsMoveArrange
+    {
+        get
+        {
+            return () =>
+            {
+                Debug.Log("이동 범위 내에 있음");
+                return true;
+            };
+        }
+    }*/
+
     protected virtual Action IsAttack
     {
-        get 
+        get
         {
             return () =>
             {
                 Debug.Log("공격");
                 myAni.SetBool("IsAttack", true);
-                
             };
         }
     }
+
     protected virtual Action IsHit
     {
-        get 
+        get
         {
             return () =>
             {
-                Debug.Log("맞는다");
+                Debug.Log("맞음");
                 myAni.SetTrigger("IsHit");
-                
             };
         }
     }
-    protected virtual Func<bool> IsDead 
+
+    protected virtual Action IsDead
     {
-        get 
+        get
         {
             return () =>
             {
-                Debug.Log("죽음");
-                return false;                
+                Debug.Log("죽었나?");
+                myAni.SetBool("IsDead", true);
+            };
+        }
+    }
+    protected virtual Action Destroy
+    {
+        get
+        {
+            return () =>
+            {
+                Debug.Log("삭제");
             };
         }
     }

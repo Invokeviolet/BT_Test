@@ -6,7 +6,7 @@ using UnityEngine;
 public class MonsterAI : MonsterParentsAI
 {
     // 체력
-    float hp = 100;
+    [SerializeField] float hp = 100f;
     float speed = 2f;
 
     // 타겟
@@ -14,8 +14,18 @@ public class MonsterAI : MonsterParentsAI
     // 적 받아올 배열
     GameObject[] enermies;
 
+    // 공격 범위
     float attackRange = 1f;
+    // 이동 범위
+    float moveRange = 10f;
 
+    // 몬스터가 가진 아이템
+    [SerializeField] GameObject Item;
+
+    private void Start()
+    {
+
+    }
 
     protected override Action IsIdle
     {
@@ -24,19 +34,19 @@ public class MonsterAI : MonsterParentsAI
             return () =>
             {
                 Debug.Log("대기");
-                myAni.SetBool("IsMove", false);                
+                myAni.SetBool("IsMove", false);
             };
         }
     }
     protected override Func<bool> IsFind
     {
-        get 
+        get
         {
             return () =>
             {
                 Debug.Log("타겟 찾기");
                 target = GameObject.FindGameObjectWithTag("Target");
-                if (target==null)
+                if (target == null)
                 {
                     Debug.Log("못찾아");
                     return true;
@@ -50,7 +60,7 @@ public class MonsterAI : MonsterParentsAI
         }
     }
 
-   
+
     protected override Action IsMove
     {
         get
@@ -62,11 +72,11 @@ public class MonsterAI : MonsterParentsAI
                 myAni.SetBool("IsAttack", false);
                 gameObject.transform.LookAt(target.transform);
                 gameObject.transform.Translate(Vector3.forward * speed * Time.deltaTime);
-                
+
             };
         }
     }
-    protected override Func<bool> IsArrange
+    protected virtual Func<bool> IsArange
     {
         get
         {
@@ -76,18 +86,61 @@ public class MonsterAI : MonsterParentsAI
                 float Distance = Vector3.Distance(target.transform.position, gameObject.transform.position);
                 if (Distance <= attackRange)
                 {
-                    Debug.Log("공격범위 내에 있나");
+                    Debug.Log("공격범위 내에 있음");
                     myAni.SetBool("IsMove", false);
+                    return true;
+                }
+                else
+                {
+                    Debug.Log("공격범위 내에 없음");
+                    return false;
+                }
+            };
+        }
+    }
+   /* protected override Func<bool> IsAttackArrange
+    {
+        get
+        {
+            return () =>
+            {
+                Debug.Log("범위 내에 있음");
+                float Distance = Vector3.Distance(target.transform.position, gameObject.transform.position);
+                if (Distance <= attackRange)
+                {
+                    Debug.Log("공격범위 내에 있음");
+                    myAni.SetBool("IsMove", false);
+                    return true;
+                }
+                else
+                {
+                    Debug.Log("공격범위 내에 없음");
+                    return false;
+                }
+            };
+        }
+    }
+    protected virtual Func<bool> IsMoveArrange
+    {
+        get
+        {
+            return () =>
+            {
+                Debug.Log("이동 범위 내에 있음");
+                float Distance = Vector3.Distance(target.transform.position, gameObject.transform.position);
+                if (Distance <= moveRange)
+                {
+                    Debug.Log("이동범위 내에 있음");                    
                     return false;
                 }
                 else
                 {
+                    Debug.Log("이동범위 내에 없음");
                     return true;
                 }
-
             };
         }
-    }
+    }*/
 
     protected override Action IsAttack
     {
@@ -97,45 +150,44 @@ public class MonsterAI : MonsterParentsAI
             {
                 Debug.Log("공격");
                 myAni.SetBool("IsAttack", true);
-                
-
             };
         }
     }
-    
     protected override Action IsHit
     {
         get
         {
             return () =>
             {
-                Debug.Log("맞는다");
+                Debug.Log("맞음");
                 myAni.SetTrigger("IsHit");
-                // 데미지 받을 때 콜라이더로 체크하려면
             };
         }
     }
-    protected override Func<bool> IsDead // 체력이 0일때 판정
+
+    protected override Action IsDead
     {
         get
         {
             return () =>
             {
-
-                if (hp <= 0)
-                {
-                    Debug.Log("죽음");
-                    return true;
-                    myAni.SetBool("IsDead", true);
-                }
-                else 
-                {
-                    return false;
-                    myAni.SetBool("IsDead", false);
-                }
-                
-                
+                Debug.Log("죽었나?");
+                myAni.SetBool("IsDead", true);
+                Instantiate(Item, this.transform.position, Quaternion.identity);
             };
         }
     }
+    protected override Action Destroy
+    {
+        get
+        {
+            return () =>
+            {
+                Debug.Log("삭제");
+                Destroy();
+            };
+        }
+    }
+
+
 }
